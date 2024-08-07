@@ -5,7 +5,7 @@
 /RMG/Processes/OpticalPhysics true
 /run/initialize
 
-/RMG/Output/FileName build/output.csv
+#/process/optical/boundary/verbose 2
 
 
 
@@ -14,4 +14,4 @@
 
 /RMG/Generator/MUSUNCosmicMuons/SetMUSUNFile MUSUN/combined_file.dat
 
-/run/beamOn 100000
+/run/beamOn 100

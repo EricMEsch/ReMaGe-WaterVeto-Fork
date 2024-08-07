@@ -68,18 +68,26 @@ bool RMGOpticalDetector::ProcessHits(G4Step* step, G4TouchableHistory* /*history
   // optical photon?
   auto particle = step->GetTrack()->GetDefinition();
   if (particle != G4OpticalPhoton::OpticalPhotonDefinition()) return false;
-
+  
   // this is actually irrelevant as optical photons do not truly carry the energy deposited
   // This yields the photon wavelength (in energy units)
-  if (step->GetTotalEnergyDeposit() == 0) return false;
+  //if (step->GetTotalEnergyDeposit() == 0) return false;
+
 
   // Get the physical volume of the detection point (post step). A step starts
   // at PreStepPoint and ends at PostStepPoint. If a boundary is reached, the
   // PostStepPoint belongs logically to the next volume. As we write down the
   // hit when the photon reaches the boundary we need to check the
   // PostStepPoint here
-  const auto pv_name = step->GetPostStepPoint()->GetTouchableHandle()->GetVolume()->GetName();
-  const auto pv_copynr = step->GetPostStepPoint()->GetTouchableHandle()->GetCopyNumber();
+
+  // Edit by Eric Esch:
+  // After extensive testing it seems this ProcessHits method is only invoked when the step
+  // starts in the sensitive volume (why?). The workaround is to let the photon travel through
+  // the detector and catch the presteppoint of the successive step. Then delete the photon manually.
+
+  step->GetTrack()->SetTrackStatus(fStopAndKill);
+  const auto pv_name = step->GetPreStepPoint()->GetTouchableHandle()->GetVolume()->GetName();
+  const auto pv_copynr = step->GetPreStepPoint()->GetTouchableHandle()->GetCopyNumber();
 
   // check if physical volume is registered as optical detector
   auto det_cons = RMGManager::Instance()->GetDetectorConstruction();
@@ -104,7 +112,7 @@ bool RMGOpticalDetector::ProcessHits(G4Step* step, G4TouchableHistory* /*history
   // initialize hit object for uid, if not already there
   auto* hit = new RMGOpticalDetectorHit();
   hit->detector_uid = det_uid;
-  hit->photon_wavelength = CLHEP::c_light * CLHEP::h_Planck / step->GetTotalEnergyDeposit();
+  hit->photon_wavelength = CLHEP::c_light * CLHEP::h_Planck / step->GetPreStepPoint()->GetKineticEnergy();
   hit->global_time = step->GetPreStepPoint()->GetGlobalTime();
 
   // register the hit in the hit collection for the event

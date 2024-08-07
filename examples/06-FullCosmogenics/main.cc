@@ -46,17 +46,19 @@ int main(int argc, char** argv) {
   manager.GetDetectorConstruction()->IncludeGDMLFile(filename);
 
   std::vector<std::string> PMTnames = getPMTNames(filename);
-  int i = 0;
+  int id = 0;
   for (const auto& name : PMTnames) 
   {
-    manager.GetDetectorConstruction()->RegisterDetector(RMGHardware::kOptical, name, i);
-    i++;
+    manager.GetDetectorConstruction()->RegisterDetector(RMGHardware::kOptical, name, id);
+    id++;
   }
+
+  //manager.GetDetectorConstruction()->RegisterDetector(RMGHardware::kGermanium, "Ge_phys",id);
 
   std::string macro = argc > 1 ? argv[1] : "";
   if (!macro.empty()) manager.IncludeMacroFile(macro);
-
-  manager.SetNumberOfThreads(16);
+  manager.SetOutputFileName("build/output.csv");
+  manager.SetNumberOfThreads(1);
   manager.Initialize();
   manager.Run();
 
